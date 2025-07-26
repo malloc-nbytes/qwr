@@ -131,7 +131,7 @@ install(const context *ctx)
 void
 help(void)
 {
-        printf("Usage: %s [options] <mode>\n\n", "qemu_wrapper");
+        printf("Usage: %s [options] <mode>\n\n", "qwr");
         printf("A utility for managing QEMU virtual machines.\n\n");
         printf("Modes:\n");
         printf("  install         Install an OS from an ISO to a disk image\n");
@@ -149,14 +149,14 @@ help(void)
         printf("  -%s, --%s                 * Display this help message\n\n", FLAG_HELP_SHORT, FLAG_HELP_LONG);
         printf("Examples:\n");
         printf("  Create a 20GB disk image:\n");
-        printf("    %s --%s=disk.qcow2 --%s=20 create-drive\n\n", "qemu_wrapper", FLAG_IMAGE, FLAG_SIZE);
+        printf("    %s --%s=disk.qcow2 --%s=20 create-drive\n\n", "qwr", FLAG_IMAGE, FLAG_SIZE);
         printf("  Install from an ISO:\n");
         printf("    %s --%s=ubuntu.iso --%s=disk.qcow2 --%s=20 --%s=2 --%s=4 install\n\n",
-               "qemu_wrapper", FLAG_ISO, FLAG_IMAGE, FLAG_SIZE, FLAG_CORES, FLAG_MEMORY);
+               "qwr", FLAG_ISO, FLAG_IMAGE, FLAG_SIZE, FLAG_CORES, FLAG_MEMORY);
         printf("  Run a VM with GUI:\n");
-        printf("    %s --%s=disk.qcow2 --%s=2 --%s=4 run\n\n", "qemu_wrapper", FLAG_IMAGE, FLAG_CORES, FLAG_MEMORY);
+        printf("    %s --%s=disk.qcow2 --%s=2 --%s=4 run\n\n", "qwr", FLAG_IMAGE, FLAG_CORES, FLAG_MEMORY);
         printf("  Run a VM with SSH access:\n");
-        printf("    %s --%s=disk.qcow2 --%s=2222 ssh\n\n", "qemu_wrapper", FLAG_IMAGE, FLAG_SSH_PORT);
+        printf("    %s --%s=disk.qcow2 --%s=2222 ssh\n\n", "qwr", FLAG_IMAGE, FLAG_SSH_PORT);
         exit(0);
 }
 
