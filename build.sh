@@ -1,4 +1,10 @@
 #!/bin/bash
+
 set -xe
 
-cc -o qwr main.c -lforge
+files=$(find . -type f -name '*.c')
+libs=$(forge lib)
+name="qwr"
+cc="cc"
+
+$cc -o $name $files $libs
