@@ -1,6 +1,7 @@
 #include <forge/cmd.h>
 #include <forge/arg.h>
 #include <forge/str.h>
+#include <forge/cstr.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +50,7 @@ create_drive(const context *ctx)
         if (!ctx->sz) {
                 err("`create-drive` requires --" FLAG_SIZE);
         }
-        cmd(forge_str_builder("qemu-img create -f qcow2 ", ctx->img, " ", ctx->sz, "G", NULL));
+        cmd(forge_cstr_builder("qemu-img create -f qcow2 ", ctx->img, " ", ctx->sz, "G", NULL));
 }
 
 void
@@ -106,7 +107,7 @@ install(const context *ctx)
                 err("`install` requires --" FLAG_SIZE);
         }
 
-        cmd(forge_str_builder("qemu-img create -f qcow2 ", ctx->img, " ", ctx->sz, "G", NULL));
+        cmd(forge_cstr_builder("qemu-img create -f qcow2 ", ctx->img, " ", ctx->sz, "G", NULL));
         forge_str cmd_str = forge_str_from("sudo qemu-system-x86_64");
         forge_str_concat(&cmd_str, " -enable-kvm ");
         forge_str_concat(&cmd_str, "-m ");
