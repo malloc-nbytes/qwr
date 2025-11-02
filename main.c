@@ -259,10 +259,10 @@ handle_args(forge_arg *arghd)
         }
 }
 
+
 int
 main(int argc, char **argv)
 {
-
         forge_arg *arghd = forge_arg_alloc(argc, argv, 1);
         handle_args(arghd);
         forge_arg_free(arghd);
