@@ -17,6 +17,8 @@
 #define FLAG_IMAGE "img"
 #define FLAG_EXTRA_DISK "extra-disk"
 #define FLAG_SSH_PORT "ssh-port"
+#define FLAG_TPM "tpm"
+#define FLAG_SECURE "secure"
 
 #define err(msg)                                        \
         do {                                            \
@@ -39,7 +41,35 @@ typedef struct {
         char *img;
         char *extra_disk;
         char *ssh_port;
+        int   use_tpm;
+        int   use_secure;
 } context;
+
+static void
+append_uefi_tpm_options(forge_str *cmd, const context *ctx)
+{
+    if (ctx->use_secure) {
+        const char *ovmf_code   = "/usr/share/OVMF/OVMF_CODE.secboot.fd";
+        const char *ovmf_vars   = "/usr/share/OVMF/OVMF_VARS.secboot.fd";
+
+        forge_str_concat(cmd, " -drive if=pflash,format=raw,unit=0,file=");
+        forge_str_concat(cmd, ovmf_code);
+        forge_str_concat(cmd, ",readonly=on");
+
+        forge_str_concat(cmd, " -drive if=pflash,format=raw,unit=1,file=");
+        forge_str_concat(cmd, ovmf_vars);
+
+        forge_str_concat(cmd, " -machine q35,smm=on");
+        forge_str_concat(cmd, " -global driver=cfi.pflash01,property=secure,value=on");
+    }
+
+    // TPM 2.0 emulation via swtpm
+    if (ctx->use_tpm) {
+        forge_str_concat(cmd, " -chardev socket,id=chrtpm,path=/tmp/qwr-tpm/swtpm-sock");
+        forge_str_concat(cmd, " -tpmdev emulator,id=tpm0,chardev=chrtpm");
+        forge_str_concat(cmd, " -device tpm-tis,tpmdev=tpm0");
+    }
+}
 
 void
 create_drive(const context *ctx)
@@ -67,6 +97,9 @@ run(const context *ctx)
         forge_str_concat(&cmd_str, "G");
         forge_str_concat(&cmd_str, " -smp ");
         forge_str_concat(&cmd_str, ctx->cores);
+
+        append_uefi_tpm_options(&cmd_str, ctx);
+
         forge_str_concat(&cmd_str, " -cpu host");
         forge_str_concat(&cmd_str, " -hda ");
         forge_str_concat(&cmd_str, ctx->img);
@@ -80,7 +113,6 @@ run(const context *ctx)
                 forge_str_concat(&cmd_str, " -device e1000,netdev=net0");
                 forge_str_concat(&cmd_str, " -nographic");
         } else {
-                /* Existing GUI configuration */
                 forge_str_concat(&cmd_str, " -device e1000,netdev=net0");
                 forge_str_concat(&cmd_str, " -vga virtio");
                 forge_str_concat(&cmd_str, " -display sdl");
@@ -115,6 +147,9 @@ install(const context *ctx)
         forge_str_concat(&cmd_str, "G");
         forge_str_concat(&cmd_str, " -smp ");
         forge_str_concat(&cmd_str, ctx->cores);
+
+        append_uefi_tpm_options(&cmd_str, ctx);
+
         forge_str_concat(&cmd_str, " -cpu host");
         forge_str_concat(&cmd_str, " -cdrom ");
         forge_str_concat(&cmd_str, ctx->iso);
@@ -147,6 +182,8 @@ help(void)
         printf("  --%s=<size>               * Memory size in GB (default: 1)\n", FLAG_MEMORY);
         printf("  --%s=<file.qcow2>  * Attach an additional disk image (optional for run, ssh)\n", FLAG_EXTRA_DISK);
         printf("  --%s=<port>          * SSH port for host (default: 2222, optional for ssh)\n", FLAG_SSH_PORT);
+        printf("  --%s                      * Use tpm\n", FLAG_TPM);
+        printf("  --%s                   * Use secureboot\n", FLAG_SECURE);
         printf("  -%s, --%s                 * Display this help message\n\n", FLAG_HELP_SHORT, FLAG_HELP_LONG);
         printf("Examples:\n");
         printf("  Create a 20GB disk image:\n");
@@ -173,6 +210,8 @@ handle_args(forge_arg *arghd)
                 .img = NULL,
                 .extra_disk = NULL,
                 .ssh_port = "2222",
+                .use_tpm = 0,
+                .use_secure = 0,
         };
 
         forge_arg *arg = arghd;
@@ -226,6 +265,10 @@ handle_args(forge_arg *arghd)
                                         err("option --" FLAG_SSH_PORT " requires `=<port>`");
                                 }
                                 ctx.ssh_port = strdup(arg->eq);
+                        } else if (!strcmp(arg->s, FLAG_TPM)) {
+                                ctx.use_tpm = 1;
+                        } else if (!strcmp(arg->s, FLAG_SECURE)) {
+                                ctx.use_secure = 1;
                         } else {
                                 err_wargs("unknown flag --%s\n", arg->s);
                         }
